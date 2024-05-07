@@ -6,47 +6,71 @@ import {
   Param,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { Task } from './tasks.model';
 import { CreateTaskDto } from './dto/task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
-import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
+import { Prisma, task as TaskModel } from '@prisma/client';
 
 @Controller('/tasks')
 export class TasksController {
-  constructor(private tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) {}
+
+  @Get('/:searchString')
+  getFilteredTasks(
+    @Param('searchString') searchString: string,
+  ): Promise<TaskModel[]> {
+    return this.tasksService.getAllTasks({
+      where: {
+        OR: [
+          {
+            name: { contains: searchString },
+          },
+          {
+            description: { contains: searchString },
+          },
+        ],
+      },
+    });
+  }
 
   @Get()
-  getTasks(@Query() filterDto: GetTasksFilterDto): Task[] {
-    if (Object.keys(filterDto).length) {
-      return this.tasksService.getTasksWithFilters(filterDto);
-    } else {
-      return this.tasksService.getAllTasks();
-    }
+  getTasks(): Promise<TaskModel[]> {
+    return this.tasksService.getTasks();
   }
 
-  @Get('/:id')
-  getTaskById(@Param('id') id: string): Task {
-    return this.tasksService.getTaskById(id);
-  }
+  // @Get('/:id')
+  // getTaskById(@Param('id') id: string): Task {
+  //   return this.tasksService.getTaskById(id);
+  // }
   @Post()
-  createTask(@Body() createTaskDto: CreateTaskDto): Task {
-    return this.tasksService.createTask(createTaskDto);
+  createTask(@Body() createTaskDto: CreateTaskDto): Promise<TaskModel> {
+    const { name, description } = createTaskDto;
+    return this.tasksService.createTask({
+      name,
+      description,
+    });
   }
 
   @Delete('/:id')
-  deleteTask(@Param('id') id: string): void {
-    return this.tasksService.deleteTask(id);
+  deleteTask(@Param('id') id: Number): Promise<TaskModel> {
+    return this.tasksService.deleteTask({ id: Number(id) });
   }
 
-  @Patch('/:id/status')
+  @Patch('/:id')
   updateTask(
-    @Param('id') id: string,
+    @Param('id') id: Number,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
-  ): Task {
+  ): Promise<TaskModel> {
     const { status } = updateTaskStatusDto;
-    return this.tasksService.updateTaskStatus(id, status);
+
+    try {
+      return this.tasksService.updateTask({
+        where: { id: Number(id) },
+        data: { status },
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
