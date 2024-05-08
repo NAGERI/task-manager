@@ -3,7 +3,6 @@ import { CreateTaskDto } from './dto/task.dto';
 import { PrismaService } from '../prisma.service';
 
 import { Prisma, task as TaskPrismaModel } from '@prisma/client';
-import { TasksModule } from './tasks.module';
 
 @Injectable()
 export class TasksService {
@@ -38,10 +37,14 @@ export class TasksService {
     });
   }
 
-  async createTask(data: CreateTaskDto): Promise<TaskPrismaModel> {
-    return this.prisma.task.create({
-      data,
-    });
+  async createTask(data: CreateTaskDto): Promise<any> {
+    try {
+      const res = await this.prisma.task.create({
+        data,
+      });
+    } catch (error) {
+      return error;
+    }
   }
 
   async updateTask(params: {
@@ -57,7 +60,6 @@ export class TasksService {
       });
       return res;
     } catch (error) {
-      console.error(error);
       return error;
     }
   }

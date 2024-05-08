@@ -13,8 +13,7 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/task.dto';
 import { UpdateTaskDto } from './dto/update-task-status.dto';
 import { Response } from 'express';
-import { Prisma, task as TaskModel } from '@prisma/client';
-import { error } from 'console';
+import { task as TaskModel } from '@prisma/client';
 
 @Controller('/tasks')
 export class TasksController {
@@ -43,24 +42,17 @@ export class TasksController {
     return this.tasksService.getTasks();
   }
 
-  // @Get('/:id')
-  // getTaskById(@Param('id') id: string): Task {
-  //   return this.tasksService.getTaskById(id);
-  // }
   @Post()
   async createTask(@Body() createTaskDto: CreateTaskDto, @Res() res: Response) {
-    try {
-      const { name, description } = createTaskDto;
-      const result = await this.tasksService.createTask({
-        name,
-        description,
-      });
-      return res.status(HttpStatus.CREATED).json(result); // Return JSON response
-    } catch (error) {
-      return res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ error: 'Internal Server Error' });
+    const { name, description } = createTaskDto;
+    const result = await this.tasksService.createTask({
+      name,
+      description,
+    });
+    if (result instanceof Error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ result });
     }
+    return res.status(HttpStatus.CREATED).json({ result }); // Return JSON response
   }
 
   @Delete('/:id')
@@ -83,11 +75,11 @@ export class TasksController {
     @Body() updateTaskDto: UpdateTaskDto,
     @Res() res: Response,
   ): Promise<any> {
-    const { status, name, description } = updateTaskDto;
+    const { status } = updateTaskDto;
 
     const result = await this.tasksService.updateTask({
       where: { id: Number(id) },
-      data: { status, name, description },
+      data: { status },
     });
 
     if (result instanceof Error) {
