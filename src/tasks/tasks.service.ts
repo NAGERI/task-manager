@@ -47,19 +47,29 @@ export class TasksService {
   async updateTask(params: {
     where: Prisma.taskWhereUniqueInput;
     data: Prisma.taskUpdateInput;
-  }): Promise<TaskPrismaModel> {
+  }): Promise<any> {
     const { where, data } = params;
-    return this.prisma.task.update({
-      data,
-      where,
-    });
+
+    try {
+      const res = await this.prisma.task.update({
+        data,
+        where,
+      });
+      return res;
+    } catch (error) {
+      console.error(error);
+      return error;
+    }
   }
 
-  async deleteTask(
-    where: Prisma.taskWhereUniqueInput,
-  ): Promise<TaskPrismaModel> {
-    return this.prisma.task.delete({
-      where,
-    });
+  async deleteTask(id: Number): Promise<any> {
+    try {
+      const res = await this.prisma.task.delete({
+        where: { id: Number(id) },
+      });
+      return res;
+    } catch (error) {
+      return error;
+    }
   }
 }

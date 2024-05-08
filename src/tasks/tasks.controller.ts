@@ -3,14 +3,18 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   Patch,
   Post,
+  Res,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/task.dto';
-import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { UpdateTaskDto } from './dto/update-task-status.dto';
+import { Response } from 'express';
 import { Prisma, task as TaskModel } from '@prisma/client';
+import { error } from 'console';
 
 @Controller('/tasks')
 export class TasksController {
@@ -44,33 +48,53 @@ export class TasksController {
   //   return this.tasksService.getTaskById(id);
   // }
   @Post()
-  createTask(@Body() createTaskDto: CreateTaskDto): Promise<TaskModel> {
-    const { name, description } = createTaskDto;
-    return this.tasksService.createTask({
-      name,
-      description,
-    });
+  async createTask(@Body() createTaskDto: CreateTaskDto, @Res() res: Response) {
+    try {
+      const { name, description } = createTaskDto;
+      const result = await this.tasksService.createTask({
+        name,
+        description,
+      });
+      return res.status(HttpStatus.CREATED).json(result); // Return JSON response
+    } catch (error) {
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ error: 'Internal Server Error' });
+    }
   }
 
   @Delete('/:id')
-  deleteTask(@Param('id') id: Number): Promise<TaskModel> {
-    return this.tasksService.deleteTask({ id: Number(id) });
+  async deleteTask(
+    @Param('id') id: Number,
+    @Res() res: Response,
+  ): Promise<any> {
+    const result = await this.tasksService.deleteTask(Number(id));
+    if (result instanceof Error) {
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ error: result });
+    }
+    return res.status(HttpStatus.NO_CONTENT);
   }
 
   @Patch('/:id')
-  updateTask(
+  async updateTask(
     @Param('id') id: Number,
-    @Body() updateTaskStatusDto: UpdateTaskStatusDto,
-  ): Promise<TaskModel> {
-    const { status } = updateTaskStatusDto;
+    @Body() updateTaskDto: UpdateTaskDto,
+    @Res() res: Response,
+  ): Promise<any> {
+    const { status, name, description } = updateTaskDto;
 
-    try {
-      return this.tasksService.updateTask({
-        where: { id: Number(id) },
-        data: { status },
-      });
-    } catch (error) {
-      console.error(error);
+    const result = await this.tasksService.updateTask({
+      where: { id: Number(id) },
+      data: { status, name, description },
+    });
+
+    if (result instanceof Error) {
+      return res
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ error: result });
     }
+    return res.status(HttpStatus.OK).json({ result });
   }
 }

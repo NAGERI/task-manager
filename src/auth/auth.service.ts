@@ -8,9 +8,9 @@ export class AuthService {
   constructor(private prisma: PrismaService) {}
   private logger = new Logger('AuthService');
 
-  createUser(data: AuthCredentialsDto): Promise<AuthPrismaModel> {
+  async createUser(data: AuthCredentialsDto): Promise<AuthPrismaModel> {
     this.logger.verbose('User created');
-    return this.prisma.user.create({
+    return await this.prisma.user.create({
       data,
     });
   }
