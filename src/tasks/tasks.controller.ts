@@ -5,15 +5,18 @@ import {
   Get,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Res,
+  UsePipes,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { CreateTaskDto } from './dto/task.dto';
+import { CreateTaskDto, createTaskSchema } from './dto/task.dto';
 import { UpdateTaskDto } from './dto/update-task-status.dto';
 import { Response } from 'express';
 import { task as TaskModel } from '@prisma/client';
+import { CreateTaskValidatorPipe } from 'src/utils/validation.pipe';
 
 @Controller('/tasks')
 export class TasksController {
@@ -43,6 +46,7 @@ export class TasksController {
   }
 
   @Post()
+  @UsePipes(new CreateTaskValidatorPipe(createTaskSchema))
   async createTask(@Body() createTaskDto: CreateTaskDto, @Res() res: Response) {
     const { name, description } = createTaskDto;
     const result = await this.tasksService.createTask({
@@ -57,7 +61,7 @@ export class TasksController {
 
   @Delete('/:id')
   async deleteTask(
-    @Param('id') id: Number,
+    @Param('id', ParseIntPipe) id: Number,
     @Res() res: Response,
   ): Promise<any> {
     const result = await this.tasksService.deleteTask(Number(id));

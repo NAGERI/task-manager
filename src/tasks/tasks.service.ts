@@ -42,6 +42,7 @@ export class TasksService {
       const res = await this.prisma.task.create({
         data,
       });
+      return res;
     } catch (error) {
       return error;
     }
