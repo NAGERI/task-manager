@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpStatus,
+  Logger,
   Param,
   ParseIntPipe,
   Patch,
@@ -27,19 +28,27 @@ import { AuthCredentialsDto } from 'src/auth/dto/authCredentials.dto';
 @UseGuards(AuthGuard())
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
+  private logger = new Logger('TaskService');
 
-  @Get('/:searchString')
+  @Get(':searchString')
   getFilteredTasks(
     @Param('searchString') searchString: string,
+    @GetUser() user: any,
   ): Promise<TaskModel[]> {
+    this.logger.log(`search string : ${searchString}`);
     return this.tasksService.getAllTasks({
       where: {
-        OR: [
+        AND: [
+          { userId: user.id },
           {
-            name: { contains: searchString },
-          },
-          {
-            description: { contains: searchString },
+            OR: [
+              {
+                name: { contains: searchString },
+              },
+              {
+                description: { contains: searchString },
+              },
+            ],
           },
         ],
       },
@@ -47,8 +56,10 @@ export class TasksController {
   }
 
   @Get()
-  getTasks(): Promise<TaskModel[]> {
-    return this.tasksService.getTasks();
+  getTasks(@GetUser() user: AuthCredentialsDto): Promise<TaskModel[]> {
+    this.logger.log(user);
+
+    return this.tasksService.getTasks(user);
   }
 
   @Post()

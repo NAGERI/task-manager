@@ -17,8 +17,10 @@ export class TasksService {
     return found;
   }
 
-  async getTasks(): Promise<TaskPrismaModel[]> {
-    return this.prisma.task.findMany();
+  async getTasks(user: any): Promise<TaskPrismaModel[]> {
+    return this.prisma.task.findMany({
+      where: { userId: user.id },
+    });
   }
 
   async getAllTasks(params: {
