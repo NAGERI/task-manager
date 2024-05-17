@@ -11,6 +11,7 @@ import {
   Res,
   UseGuards,
   UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto, createTaskSchema } from './dto/task.dto';
@@ -19,6 +20,8 @@ import { Response } from 'express';
 import { task as TaskModel } from '@prisma/client';
 import { CreateTaskValidatorPipe } from 'src/utils/validation.pipe';
 import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decorator';
+import { AuthCredentialsDto } from 'src/auth/dto/authCredentials.dto';
 
 @Controller('/tasks')
 @UseGuards(AuthGuard())
@@ -49,13 +52,13 @@ export class TasksController {
   }
 
   @Post()
-  @UsePipes(new CreateTaskValidatorPipe(createTaskSchema))
-  async createTask(@Body() createTaskDto: CreateTaskDto, @Res() res: Response) {
-    const { name, description } = createTaskDto;
-    const result = await this.tasksService.createTask({
-      name,
-      description,
-    });
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  async createTask(
+    @Body() createTaskDto: CreateTaskDto,
+    @GetUser() user: AuthCredentialsDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.tasksService.createTask(createTaskDto, user);
     if (result instanceof Error) {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ result });
     }

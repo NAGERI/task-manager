@@ -3,6 +3,7 @@ import { CreateTaskDto } from './dto/task.dto';
 import { PrismaService } from '../prisma.service';
 
 import { Prisma, task as TaskPrismaModel } from '@prisma/client';
+import { AuthCredentialsDto } from 'src/auth/dto/authCredentials.dto';
 
 @Injectable()
 export class TasksService {
@@ -37,10 +38,11 @@ export class TasksService {
     });
   }
 
-  async createTask(data: CreateTaskDto): Promise<any> {
+  async createTask(data: CreateTaskDto, user: any): Promise<any> {
     try {
+      const { name, description } = data;
       const res = await this.prisma.task.create({
-        data,
+        data: { name, description, userId: user.id },
       });
       return res;
     } catch (error) {

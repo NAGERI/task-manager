@@ -22,7 +22,7 @@ export class CreateTaskValidatorPipe implements PipeTransform {
     const result = this.schema.validate(value);
     if (result.error) {
       const errorMessages = result.error.details.map((d) => d.message).join();
-      throw new BadRequestException(errorMessages);
+      throw new BadRequestException(result.error);
     }
     return value;
   }

@@ -17,14 +17,17 @@ model User {
   id       Int    @id @default(autoincrement())
   username String @unique
   password String
+  task     task[]
 }
 
 model task {
   id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(20)
-  description String?  @db.VarChar(50)
+  name        String   @db.VarChar(50)
+  description String?  @db.VarChar(150)
   status      Status   @default(OPEN)
   createdAt   DateTime @default(now())
+  User        User     @relation(fields: [userId], references: [id])
+  userId      Int
 }
 
 enum Status {

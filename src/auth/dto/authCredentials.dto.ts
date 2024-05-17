@@ -6,7 +6,7 @@ export class AuthCredentialsDto {
 }
 
 export const createUserSchema = Joi.object({
-  username: Joi.string().min(5).max(20).required(),
+  username: Joi.string().min(5).required(),
   password: Joi.string()
     .min(8)
     .max(16)
@@ -14,5 +14,4 @@ export const createUserSchema = Joi.object({
     .required(),
 }).options({
   abortEarly: false,
-  allowUnknown: true,
 });
