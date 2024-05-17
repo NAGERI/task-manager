@@ -4,7 +4,7 @@ import { AuthCredentialsDto } from './dto/authCredentials.dto';
 // import { User as UserPrismaModel } from '@prisma/client';
 
 @Injectable()
-export class userService {
+export class UserService {
   constructor(private prisma: PrismaService) {}
   private logger = new Logger('UserService');
 
